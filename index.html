@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Green Future — Coaching for a Sustainable Life</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<!-- Google Sign In -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
   :root {
     --forest: #1a3a2a;
     --moss: #2e5c3a;
@@ -17,77 +18,103 @@
     --cream: #f5f0e8;
     --sand: #e8dfc8;
     --gold: #c8a84b;
-    --bark: #5c3d2e;
     --white: #fafaf7;
   }
-
   html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--forest); overflow-x: hidden; }
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--cream);
-    color: var(--forest);
-    overflow-x: hidden;
+  /* ── LOGIN OVERLAY ── */
+  #login-overlay {
+    position: fixed; inset: 0; z-index: 9999;
+    background: linear-gradient(135deg, var(--forest) 0%, var(--moss) 100%);
+    display: flex; align-items: center; justify-content: center;
+    transition: opacity .5s, visibility .5s;
   }
+  #login-overlay.hidden { opacity: 0; visibility: hidden; }
+  .login-box {
+    background: var(--white); border-radius: 28px;
+    padding: 3rem 2.5rem; text-align: center;
+    max-width: 400px; width: 90%;
+    box-shadow: 0 40px 80px rgba(0,0,0,.3);
+    animation: popIn .5s cubic-bezier(.34,1.56,.64,1);
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(.85); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .login-logo { font-family: 'Playfair Display', serif; font-size: 1.8rem; font-weight: 900; color: var(--forest); margin-bottom: .3rem; }
+  .login-leaf { font-size: 2.5rem; display: block; margin-bottom: 1rem; }
+  .login-title { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 700; color: var(--forest); margin-bottom: .5rem; }
+  .login-sub { font-size: .9rem; color: var(--sage); margin-bottom: 2rem; line-height: 1.6; }
+  .google-btn {
+    display: flex; align-items: center; justify-content: center; gap: .8rem;
+    width: 100%; padding: .9rem 1.5rem; border-radius: 50px;
+    border: 1.5px solid var(--foam); background: var(--white);
+    font-size: .95rem; font-weight: 500; color: var(--forest);
+    cursor: pointer; transition: .2s; text-decoration: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+  }
+  .google-btn:hover { background: var(--foam); border-color: var(--mint); transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.12); }
+  .google-icon { width: 22px; height: 22px; }
+  .login-divider { display: flex; align-items: center; gap: 1rem; margin: 1.5rem 0; }
+  .login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--foam); }
+  .login-divider span { font-size: .78rem; color: var(--sage); }
+  .guest-btn {
+    width: 100%; padding: .8rem; border-radius: 50px;
+    border: none; background: var(--foam); color: var(--moss);
+    font-size: .9rem; font-weight: 500; cursor: pointer; transition: .2s;
+  }
+  .guest-btn:hover { background: var(--mint); color: var(--forest); }
+  .login-privacy { font-size: .72rem; color: var(--sage); margin-top: 1.5rem; line-height: 1.5; }
+
+  /* ── USER AVATAR (top right after login) ── */
+  #user-bar {
+    position: fixed; top: 1rem; right: 1rem; z-index: 200;
+    display: none; align-items: center; gap: .6rem;
+    background: var(--white); border-radius: 50px;
+    padding: .4rem .8rem .4rem .4rem;
+    box-shadow: 0 4px 20px rgba(26,58,42,.12);
+    border: 1px solid var(--foam);
+  }
+  #user-bar.show { display: flex; }
+  #user-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+  #user-name { font-size: .82rem; font-weight: 500; color: var(--forest); }
+  #logout-btn {
+    font-size: .72rem; color: var(--sage); background: none; border: none;
+    cursor: pointer; padding: .2rem .5rem; border-radius: 50px;
+    transition: .2s;
+  }
+  #logout-btn:hover { background: var(--foam); color: var(--forest); }
 
   /* ── NAV ── */
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
     padding: 1.4rem 4rem;
-    background: transparent;
     transition: background .4s, backdrop-filter .4s;
   }
-  nav.scrolled {
-    background: rgba(245,240,232,.92);
-    backdrop-filter: blur(14px);
-    box-shadow: 0 1px 0 rgba(26,58,42,.08);
-  }
-  .logo {
-    font-family: 'Playfair Display', serif;
-    font-size: 1.5rem; font-weight: 900;
-    color: var(--forest);
-    letter-spacing: -.02em;
-    display: flex; align-items: center; gap: .5rem;
-  }
-  .logo-leaf { font-size: 1.2rem; }
+  nav.scrolled { background: rgba(245,240,232,.92); backdrop-filter: blur(14px); box-shadow: 0 1px 0 rgba(26,58,42,.08); }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; font-weight: 900; color: var(--forest); letter-spacing: -.02em; display: flex; align-items: center; gap: .5rem; }
   .nav-links { display: flex; gap: 2.5rem; list-style: none; }
-  .nav-links a {
-    text-decoration: none; font-size: .9rem; font-weight: 500;
-    color: var(--moss); letter-spacing: .03em;
-    transition: color .2s;
-  }
+  .nav-links a { text-decoration: none; font-size: .9rem; font-weight: 500; color: var(--moss); letter-spacing: .03em; transition: color .2s; }
   .nav-links a:hover { color: var(--gold); }
-  .nav-cta {
-    background: var(--forest); color: var(--cream) !important;
-    padding: .55rem 1.4rem; border-radius: 50px;
-    transition: background .2s !important;
-  }
-  .nav-cta:hover { background: var(--moss) !important; color: var(--cream) !important; }
+  .nav-cta { background: var(--forest); color: var(--cream) !important; padding: .55rem 1.4rem; border-radius: 50px; transition: background .2s !important; }
+  .nav-cta:hover { background: var(--moss) !important; }
 
   /* ── HERO ── */
   .hero {
-    min-height: 100vh;
-    display: grid; grid-template-columns: 1fr 1fr;
-    padding: 7rem 4rem 4rem;
-    position: relative; overflow: hidden;
+    min-height: 100vh; display: grid; grid-template-columns: 1fr 1fr;
+    padding: 7rem 4rem 4rem; position: relative; overflow: hidden;
     background: var(--white);
   }
   .hero::before {
-    content: '';
-    position: absolute; inset: 0;
+    content: ''; position: absolute; inset: 0;
     background: radial-gradient(ellipse 80% 60% at 70% 40%, rgba(168,201,160,.35) 0%, transparent 70%),
                 radial-gradient(ellipse 50% 40% at 20% 80%, rgba(106,143,110,.15) 0%, transparent 60%);
     pointer-events: none;
   }
-
-  /* Floating organic shapes */
-  .blob {
-    position: absolute; border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%;
-    opacity: .18; pointer-events: none;
-    animation: blobMorph 14s ease-in-out infinite alternate;
-  }
-  .blob1 { width: 420px; height: 420px; background: var(--mint); top: -80px; right: -60px; animation-delay: 0s; }
+  .blob { position: absolute; border-radius: 60% 40% 70% 30% / 50% 60% 40% 50%; opacity: .18; pointer-events: none; animation: blobMorph 14s ease-in-out infinite alternate; }
+  .blob1 { width: 420px; height: 420px; background: var(--mint); top: -80px; right: -60px; }
   .blob2 { width: 280px; height: 280px; background: var(--sage); bottom: 80px; left: 5%; animation-delay: -5s; }
   .blob3 { width: 180px; height: 180px; background: var(--gold); top: 40%; right: 42%; animation-delay: -9s; }
   @keyframes blobMorph {
@@ -95,198 +122,61 @@
     50%  { border-radius: 40% 60% 30% 70% / 60% 40% 50% 50%; }
     100% { border-radius: 70% 30% 50% 50% / 30% 70% 60% 40%; }
   }
-
-  .hero-left {
-    display: flex; flex-direction: column; justify-content: center;
-    z-index: 2; padding-right: 3rem;
-  }
-  .hero-badge {
-    display: inline-flex; align-items: center; gap: .5rem;
-    background: var(--foam); border: 1px solid var(--mint);
-    color: var(--moss); font-size: .8rem; font-weight: 500; letter-spacing: .08em;
-    padding: .4rem 1rem; border-radius: 50px;
-    width: fit-content; margin-bottom: 2rem;
-    animation: fadeUp .8s .1s both;
-  }
-  .hero-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(3rem, 5vw, 5rem);
-    line-height: 1.05; font-weight: 900;
-    color: var(--forest);
-    margin-bottom: 1.5rem;
-    animation: fadeUp .8s .25s both;
-  }
+  .hero-left { display: flex; flex-direction: column; justify-content: center; z-index: 2; padding-right: 3rem; }
+  .hero-badge { display: inline-flex; align-items: center; gap: .5rem; background: var(--foam); border: 1px solid var(--mint); color: var(--moss); font-size: .8rem; font-weight: 500; letter-spacing: .08em; padding: .4rem 1rem; border-radius: 50px; width: fit-content; margin-bottom: 2rem; animation: fadeUp .8s .1s both; }
+  .hero-title { font-family: 'Playfair Display', serif; font-size: clamp(3rem, 5vw, 5rem); line-height: 1.05; font-weight: 900; color: var(--forest); margin-bottom: 1.5rem; animation: fadeUp .8s .25s both; }
   .hero-title em { font-style: italic; color: var(--sage); }
-  .hero-sub {
-    font-size: 1.1rem; line-height: 1.7; color: var(--moss);
-    max-width: 440px; margin-bottom: 2.5rem;
-    animation: fadeUp .8s .4s both;
-  }
-  .hero-actions {
-    display: flex; align-items: center; gap: 1.2rem;
-    animation: fadeUp .8s .55s both;
-  }
-  .btn-primary {
-    background: var(--forest); color: var(--cream);
-    padding: .85rem 2rem; border-radius: 50px;
-    font-size: .95rem; font-weight: 500; text-decoration: none;
-    transition: transform .2s, box-shadow .2s;
-    box-shadow: 0 4px 24px rgba(26,58,42,.22);
-  }
+  .hero-sub { font-size: 1.1rem; line-height: 1.7; color: var(--moss); max-width: 440px; margin-bottom: 2.5rem; animation: fadeUp .8s .4s both; }
+  .hero-actions { display: flex; align-items: center; gap: 1.2rem; animation: fadeUp .8s .55s both; }
+  .btn-primary { background: var(--forest); color: var(--cream); padding: .85rem 2rem; border-radius: 50px; font-size: .95rem; font-weight: 500; text-decoration: none; transition: transform .2s, box-shadow .2s; box-shadow: 0 4px 24px rgba(26,58,42,.22); }
   .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(26,58,42,.3); }
-  .btn-ghost {
-    color: var(--moss); font-size: .95rem; font-weight: 500;
-    text-decoration: none; display: flex; align-items: center; gap: .4rem;
-    transition: color .2s;
-  }
+  .btn-ghost { color: var(--moss); font-size: .95rem; font-weight: 500; text-decoration: none; display: flex; align-items: center; gap: .4rem; transition: color .2s; }
   .btn-ghost:hover { color: var(--gold); }
-  .arrow { font-size: 1.1rem; transition: transform .2s; }
-  .btn-ghost:hover .arrow { transform: translateX(4px); }
-
-  .hero-stats {
-    display: flex; gap: 2.5rem; margin-top: 3.5rem;
-    animation: fadeUp .8s .7s both;
-  }
-  .stat-num {
-    font-family: 'Playfair Display', serif;
-    font-size: 2rem; font-weight: 700; color: var(--forest);
-  }
+  .hero-stats { display: flex; gap: 2.5rem; margin-top: 3.5rem; animation: fadeUp .8s .7s both; }
+  .stat-num { font-family: 'Playfair Display', serif; font-size: 2rem; font-weight: 700; color: var(--forest); }
   .stat-label { font-size: .8rem; color: var(--sage); letter-spacing: .05em; margin-top: .15rem; }
-
-  .hero-right {
-    position: relative; z-index: 2;
-    display: flex; align-items: center; justify-content: center;
-  }
+  .hero-right { position: relative; z-index: 2; display: flex; align-items: center; justify-content: center; }
   .hero-card-stack { position: relative; width: 360px; height: 500px; }
-
-  /* Cards stacked visually */
-  .coach-card {
-    position: absolute; border-radius: 24px; overflow: hidden;
-    box-shadow: 0 24px 64px rgba(26,58,42,.18);
-    animation: floatCard 6s ease-in-out infinite alternate;
-  }
-  .coach-card.main {
-    width: 300px; height: 380px; left: 30px; top: 40px;
-    background: linear-gradient(160deg, var(--moss) 0%, var(--forest) 100%);
-    animation-delay: 0s;
-  }
-  .coach-card.secondary {
-    width: 200px; height: 130px; right: 0; bottom: 60px;
-    background: var(--white); border: 1px solid var(--foam);
-    animation-delay: -3s;
-    display: flex; align-items: center; padding: 1.2rem; gap: .8rem;
-  }
-  .coach-card.tag-card {
-    width: 160px; height: 60px; left: 10px; top: 10px;
-    background: var(--gold); border-radius: 50px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: .8rem; font-weight: 600; color: var(--forest);
-    animation-delay: -1.5s;
-  }
+  .coach-card { position: absolute; border-radius: 24px; overflow: hidden; box-shadow: 0 24px 64px rgba(26,58,42,.18); animation: floatCard 6s ease-in-out infinite alternate; }
+  .coach-card.main { width: 300px; height: 380px; left: 30px; top: 40px; background: linear-gradient(160deg, var(--moss) 0%, var(--forest) 100%); --rot: -3deg; }
+  .coach-card.secondary { width: 200px; height: 130px; right: 0; bottom: 60px; background: var(--white); border: 1px solid var(--foam); animation-delay: -3s; display: flex; align-items: center; padding: 1.2rem; gap: .8rem; --rot: 4deg; }
+  .coach-card.tag-card { width: 160px; height: 60px; left: 10px; top: 10px; background: var(--gold); border-radius: 50px; display: flex; align-items: center; justify-content: center; font-size: .8rem; font-weight: 600; color: var(--forest); animation-delay: -1.5s; --rot: -1deg; }
   @keyframes floatCard {
     from { transform: translateY(0) rotate(var(--rot, 0deg)); }
     to   { transform: translateY(-12px) rotate(var(--rot, 0deg)); }
   }
-  .coach-card.main { --rot: -3deg; }
-  .coach-card.secondary { --rot: 4deg; }
-  .coach-card.tag-card { --rot: -1deg; }
-
-  /* Main card content */
-  .coach-card-inner {
-    padding: 2rem; height: 100%; display: flex; flex-direction: column; justify-content: flex-end;
-    background: linear-gradient(to top, rgba(0,0,0,.45) 0%, transparent 55%);
-  }
-  .coach-avatar {
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, #3a6b4a 0%, #2e5c3a 40%, #1a3a2a 100%);
-    display: flex; align-items: center; justify-content: center; font-size: 5rem;
-  }
+  .coach-avatar { position: absolute; inset: 0; background: linear-gradient(135deg, #3a6b4a 0%, #2e5c3a 40%, #1a3a2a 100%); display: flex; align-items: center; justify-content: center; font-size: 5rem; }
+  .coach-card-inner { padding: 2rem; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; background: linear-gradient(to top, rgba(0,0,0,.45) 0%, transparent 55%); }
   .coach-info { position: relative; z-index: 1; }
   .coach-name { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: #fff; font-weight: 700; }
   .coach-role { font-size: .8rem; color: rgba(255,255,255,.7); margin-top: .2rem; }
   .coach-stars { color: var(--gold); font-size: .9rem; margin-top: .5rem; }
-
-  .progress-mini { display: flex; flex-direction: column; }
-  .prog-label { font-size: .7rem; color: var(--sage); margin-bottom: .4rem; }
   .prog-bar { height: 6px; background: var(--foam); border-radius: 10px; overflow: hidden; width: 100px; }
   .prog-fill { height: 100%; background: linear-gradient(90deg, var(--mint), var(--sage)); border-radius: 10px; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: translateY(0); } }
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(28px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ── MARQUEE STRIP ── */
-  .marquee-strip {
-    background: var(--forest); color: var(--mint);
-    padding: .9rem 0; overflow: hidden;
-    font-size: .85rem; letter-spacing: .12em; font-weight: 500;
-  }
-  .marquee-track {
-    display: flex; gap: 3rem; white-space: nowrap;
-    animation: marquee 24s linear infinite;
-  }
+  /* ── MARQUEE ── */
+  .marquee-strip { background: var(--forest); color: var(--mint); padding: .9rem 0; overflow: hidden; font-size: .85rem; letter-spacing: .12em; font-weight: 500; }
+  .marquee-track { display: flex; gap: 3rem; white-space: nowrap; animation: marquee 24s linear infinite; }
   .marquee-item { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
-  @keyframes marquee {
-    from { transform: translateX(0); }
-    to   { transform: translateX(-50%); }
-  }
+  @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
   /* ── ABOUT ── */
-  .about {
-    display: grid; grid-template-columns: 1fr 1fr;
-    padding: 8rem 4rem; gap: 6rem; background: var(--cream);
-  }
-  .about-visual {
-    position: relative; display: flex; justify-content: center; align-items: center;
-  }
-  .about-ring {
-    width: 360px; height: 360px; border-radius: 50%;
-    border: 2px solid var(--mint); position: relative;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .about-ring::before {
-    content: ''; position: absolute; inset: 16px;
-    border-radius: 50%; background: var(--foam);
-  }
+  .about { display: grid; grid-template-columns: 1fr 1fr; padding: 8rem 4rem; gap: 6rem; background: var(--cream); }
+  .about-ring { width: 360px; height: 360px; border-radius: 50%; border: 2px solid var(--mint); position: relative; display: flex; align-items: center; justify-content: center; }
+  .about-ring::before { content: ''; position: absolute; inset: 16px; border-radius: 50%; background: var(--foam); }
   .about-ring-icon { font-size: 7rem; position: relative; z-index: 1; }
-  .orbit-dot {
-    position: absolute; width: 14px; height: 14px; border-radius: 50%;
-    background: var(--gold); top: 50%; left: 50%;
-    transform-origin: 0 0;
-  }
-  .orbit-dot::after {
-    content: ''; position: absolute; inset: -3px; border-radius: 50%;
-    background: transparent; border: 1px solid var(--gold); opacity: .4;
-  }
+  .orbit-dot { position: absolute; width: 14px; height: 14px; border-radius: 50%; background: var(--gold); top: 50%; left: 50%; transform-origin: 0 0; }
   .orbit-d1 { animation: orbit 8s linear infinite; }
   .orbit-d2 { animation: orbit 12s linear infinite reverse; width: 10px; height: 10px; background: var(--sage); }
   .orbit-d3 { animation: orbit 5s linear infinite; width: 8px; height: 8px; background: var(--mint); }
-  @keyframes orbit {
-    from { transform: rotate(0deg) translateX(190px) rotate(0deg); }
-    to   { transform: rotate(360deg) translateX(190px) rotate(-360deg); }
-  }
-
+  @keyframes orbit { from { transform: rotate(0deg) translateX(190px) rotate(0deg); } to { transform: rotate(360deg) translateX(190px) rotate(-360deg); } }
   .about-text { display: flex; flex-direction: column; justify-content: center; }
-  .section-label {
-    font-size: .75rem; letter-spacing: .15em; font-weight: 600;
-    color: var(--gold); text-transform: uppercase; margin-bottom: 1rem;
-  }
-  .section-title {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(2rem, 3.5vw, 3rem);
-    font-weight: 900; line-height: 1.15;
-    color: var(--forest); margin-bottom: 1.5rem;
-  }
+  .section-label { font-size: .75rem; letter-spacing: .15em; font-weight: 600; color: var(--gold); text-transform: uppercase; margin-bottom: 1rem; }
+  .section-title { font-family: 'Playfair Display', serif; font-size: clamp(2rem, 3.5vw, 3rem); font-weight: 900; line-height: 1.15; color: var(--forest); margin-bottom: 1.5rem; }
   .section-title em { font-style: italic; color: var(--sage); }
   .section-body { font-size: 1.05rem; line-height: 1.8; color: var(--moss); margin-bottom: 2rem; }
-  .pillar-list { display: flex; flex-direction: column; gap: .9rem; }
-  .pillar {
-    display: flex; align-items: flex-start; gap: 1rem;
-    padding: 1rem 1.2rem; background: var(--white);
-    border-radius: 14px; border: 1px solid var(--foam);
-    transition: border-color .2s, transform .2s;
-  }
+  .pillar { display: flex; align-items: flex-start; gap: 1rem; padding: 1rem 1.2rem; background: var(--white); border-radius: 14px; border: 1px solid var(--foam); transition: .2s; margin-bottom: .9rem; }
   .pillar:hover { border-color: var(--mint); transform: translateX(4px); }
   .pillar-icon { font-size: 1.4rem; flex-shrink: 0; }
   .pillar-text strong { display: block; font-size: .95rem; color: var(--forest); margin-bottom: .2rem; }
@@ -296,176 +186,66 @@
   .services { padding: 8rem 4rem; background: var(--white); }
   .services-header { text-align: center; margin-bottom: 4rem; }
   .services-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; }
-  .service-card {
-    background: var(--cream); border-radius: 24px;
-    padding: 2.5rem 2rem; border: 1px solid var(--foam);
-    transition: transform .3s, box-shadow .3s, background .3s;
-    position: relative; overflow: hidden;
-  }
-  .service-card::before {
-    content: ''; position: absolute; inset: 0; opacity: 0;
-    background: linear-gradient(135deg, var(--moss) 0%, var(--forest) 100%);
-    transition: opacity .3s;
-  }
+  .service-card { background: var(--cream); border-radius: 24px; padding: 2.5rem 2rem; border: 1px solid var(--foam); transition: .3s; position: relative; overflow: hidden; }
+  .service-card::before { content: ''; position: absolute; inset: 0; opacity: 0; background: linear-gradient(135deg, var(--moss) 0%, var(--forest) 100%); transition: opacity .3s; }
   .service-card:hover { transform: translateY(-8px); box-shadow: 0 24px 48px rgba(26,58,42,.12); }
   .service-card:hover::before { opacity: 1; }
   .service-card > * { position: relative; z-index: 1; }
-  .service-card:hover .service-icon,
-  .service-card:hover .service-title,
-  .service-card:hover .service-desc,
-  .service-card:hover .service-link { color: var(--cream); }
-  .service-card:hover .service-link { border-color: rgba(255,255,255,.3); }
+  .service-card:hover .service-icon, .service-card:hover .service-title, .service-card:hover .service-desc, .service-card:hover .service-link { color: var(--cream); }
   .service-icon { font-size: 2.5rem; margin-bottom: 1.5rem; display: block; }
-  .service-title {
-    font-family: 'Playfair Display', serif; font-size: 1.4rem;
-    font-weight: 700; color: var(--forest); margin-bottom: .8rem;
-  }
+  .service-title { font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700; color: var(--forest); margin-bottom: .8rem; }
   .service-desc { font-size: .9rem; line-height: 1.7; color: var(--sage); margin-bottom: 1.5rem; }
-  .service-link {
-    display: inline-flex; align-items: center; gap: .4rem;
-    font-size: .85rem; font-weight: 500; color: var(--moss);
-    text-decoration: none; border-bottom: 1px solid var(--mint);
-    padding-bottom: .15rem; transition: gap .2s, color .3s, border-color .3s;
-  }
-  .service-link:hover { gap: .7rem; }
+  .service-link { display: inline-flex; align-items: center; gap: .4rem; font-size: .85rem; font-weight: 500; color: var(--moss); text-decoration: none; border-bottom: 1px solid var(--mint); padding-bottom: .15rem; transition: .2s; }
 
   /* ── COACHES ── */
   .coaches { padding: 8rem 4rem; background: var(--forest); }
   .coaches-header { text-align: center; margin-bottom: 4rem; }
-  .coaches-header .section-label { color: var(--gold); }
-  .coaches-header .section-title { color: var(--cream); }
   .coaches-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; }
-  .coach-profile {
-    background: rgba(255,255,255,.06); border-radius: 24px;
-    padding: 2.5rem 2rem; border: 1px solid rgba(255,255,255,.1);
-    text-align: center; transition: transform .3s, background .3s;
-  }
+  .coach-profile { background: rgba(255,255,255,.06); border-radius: 24px; padding: 2.5rem 2rem; border: 1px solid rgba(255,255,255,.1); text-align: center; transition: .3s; }
   .coach-profile:hover { transform: translateY(-6px); background: rgba(255,255,255,.1); }
-  .coach-ava {
-    width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 1.2rem;
-    display: flex; align-items: center; justify-content: center; font-size: 3rem;
-    background: linear-gradient(135deg, var(--sage), var(--moss));
-  }
+  .coach-ava { width: 90px; height: 90px; border-radius: 50%; margin: 0 auto 1.2rem; display: flex; align-items: center; justify-content: center; font-size: 3rem; background: linear-gradient(135deg, var(--sage), var(--moss)); }
   .coach-pname { font-family: 'Playfair Display', serif; font-size: 1.2rem; color: var(--cream); font-weight: 700; }
   .coach-spec { font-size: .82rem; color: var(--mint); margin: .3rem 0 1rem; }
   .coach-tags { display: flex; flex-wrap: wrap; gap: .4rem; justify-content: center; }
-  .tag {
-    font-size: .72rem; padding: .3rem .7rem; border-radius: 50px;
-    background: rgba(168,201,160,.15); color: var(--mint); border: 1px solid rgba(168,201,160,.25);
-  }
-
-  /* ── TESTIMONIALS ── */
-  .testimonials { padding: 8rem 4rem; background: var(--cream); overflow: hidden; }
-  .testimonials-header { text-align: center; margin-bottom: 4rem; }
-  .testi-track { display: flex; gap: 1.5rem; }
-  .testi-card {
-    flex-shrink: 0; width: 360px; background: var(--white);
-    border-radius: 20px; padding: 2rem; border: 1px solid var(--foam);
-  }
-  .testi-stars { color: var(--gold); font-size: 1rem; margin-bottom: 1rem; }
-  .testi-quote {
-    font-family: 'Playfair Display', serif; font-size: 1.05rem;
-    line-height: 1.6; color: var(--forest); font-style: italic;
-    margin-bottom: 1.5rem;
-  }
-  .testi-author { display: flex; align-items: center; gap: .8rem; }
-  .testi-ava { width: 40px; height: 40px; border-radius: 50%; font-size: 1.3rem; display: flex; align-items: center; justify-content: center; background: var(--foam); }
-  .testi-name { font-size: .9rem; font-weight: 600; color: var(--forest); }
-  .testi-sub { font-size: .78rem; color: var(--sage); }
-
-  /* ── HOW IT WORKS ── */
-  .hiw { padding: 8rem 4rem; background: var(--white); }
-  .hiw-header { text-align: center; margin-bottom: 5rem; }
-  .hiw-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; position: relative; }
-  .hiw-steps::before {
-    content: ''; position: absolute; top: 28px; left: 10%; right: 10%; height: 1px;
-    background: var(--foam); z-index: 0;
-  }
-  .hiw-step { text-align: center; position: relative; z-index: 1; padding: 1rem; }
-  .step-num {
-    width: 56px; height: 56px; border-radius: 50%;
-    background: var(--forest); color: var(--cream);
-    font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 700;
-    display: flex; align-items: center; justify-content: center;
-    margin: 0 auto 1.5rem;
-    box-shadow: 0 4px 20px rgba(26,58,42,.25);
-  }
-  .step-title { font-size: 1rem; font-weight: 600; color: var(--forest); margin-bottom: .5rem; }
-  .step-desc { font-size: .85rem; line-height: 1.6; color: var(--sage); }
+  .tag { font-size: .72rem; padding: .3rem .7rem; border-radius: 50px; background: rgba(168,201,160,.15); color: var(--mint); border: 1px solid rgba(168,201,160,.25); }
 
   /* ── PRICING ── */
   .pricing { padding: 8rem 4rem; background: var(--cream); }
   .pricing-header { text-align: center; margin-bottom: 4rem; }
   .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 960px; margin: 0 auto; }
-  .price-card {
-    background: var(--white); border-radius: 24px;
-    padding: 2.5rem 2rem; border: 1px solid var(--foam);
-    transition: transform .3s; position: relative;
-  }
-  .price-card.featured {
-    background: var(--forest); border-color: var(--forest);
-    transform: scale(1.04);
-    box-shadow: 0 24px 64px rgba(26,58,42,.25);
-  }
-  .price-card.featured:hover { transform: scale(1.04) translateY(-4px); }
+  .price-card { background: var(--white); border-radius: 24px; padding: 2.5rem 2rem; border: 1px solid var(--foam); transition: .3s; position: relative; }
+  .price-card.featured { background: var(--forest); border-color: var(--forest); transform: scale(1.04); box-shadow: 0 24px 64px rgba(26,58,42,.25); }
   .price-card:not(.featured):hover { transform: translateY(-4px); }
-  .popular-badge {
-    position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
-    background: var(--gold); color: var(--forest);
-    font-size: .72rem; font-weight: 700; letter-spacing: .08em;
-    padding: .3rem .9rem; border-radius: 50px; white-space: nowrap;
-  }
+  .popular-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--gold); color: var(--forest); font-size: .72rem; font-weight: 700; letter-spacing: .08em; padding: .3rem .9rem; border-radius: 50px; white-space: nowrap; }
   .plan-name { font-size: .8rem; letter-spacing: .12em; font-weight: 600; color: var(--sage); text-transform: uppercase; margin-bottom: 1rem; }
   .price-card.featured .plan-name { color: var(--mint); }
-  .plan-price {
-    font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 900;
-    color: var(--forest); line-height: 1; margin-bottom: .3rem;
-  }
+  .plan-price { font-family: 'Playfair Display', serif; font-size: 3rem; font-weight: 900; color: var(--forest); line-height: 1; margin-bottom: .3rem; }
   .price-card.featured .plan-price { color: var(--cream); }
   .plan-period { font-size: .82rem; color: var(--sage); margin-bottom: 1.5rem; }
   .price-card.featured .plan-period { color: var(--mint); }
   .plan-features { list-style: none; margin-bottom: 2rem; display: flex; flex-direction: column; gap: .7rem; }
   .plan-features li { font-size: .88rem; color: var(--moss); display: flex; align-items: center; gap: .6rem; }
-  .plan-features li::before { content: '✓'; color: var(--sage); font-weight: 700; flex-shrink: 0; }
+  .plan-features li::before { content: '✓'; color: var(--sage); font-weight: 700; }
   .price-card.featured .plan-features li { color: rgba(212,234,210,.85); }
   .price-card.featured .plan-features li::before { color: var(--mint); }
-  .plan-btn {
-    display: block; text-align: center; text-decoration: none;
-    padding: .85rem; border-radius: 50px; font-size: .9rem; font-weight: 600;
-    background: var(--foam); color: var(--forest);
-    border: 1px solid var(--mint); transition: .2s;
-  }
-  .price-card.featured .plan-btn { background: var(--cream); color: var(--forest); border-color: transparent; }
-  .plan-btn:hover { background: var(--forest); color: var(--cream); border-color: var(--forest); }
-  .price-card.featured .plan-btn:hover { background: var(--mint); }
+  .plan-btn { display: block; text-align: center; text-decoration: none; padding: .85rem; border-radius: 50px; font-size: .9rem; font-weight: 600; background: var(--foam); color: var(--forest); border: 1px solid var(--mint); transition: .2s; cursor: pointer; }
+  .price-card.featured .plan-btn { background: var(--cream); border-color: transparent; }
+  .plan-btn:hover { background: var(--forest); color: var(--cream); }
 
-  /* ── CTA BANNER ── */
-  .cta-banner {
-    padding: 6rem 4rem; text-align: center;
-    background: linear-gradient(135deg, var(--moss) 0%, var(--forest) 100%);
-    position: relative; overflow: hidden;
-  }
-  .cta-banner::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(168,201,160,.15) 0%, transparent 70%);
-  }
+  /* ── CTA ── */
+  .cta-banner { padding: 6rem 4rem; text-align: center; background: linear-gradient(135deg, var(--moss) 0%, var(--forest) 100%); position: relative; overflow: hidden; }
+  .cta-banner::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 80% at 50% 50%, rgba(168,201,160,.15) 0%, transparent 70%); }
   .cta-banner > * { position: relative; z-index: 1; }
-  .cta-title {
-    font-family: 'Playfair Display', serif; font-size: clamp(2.5rem, 5vw, 4rem);
-    color: var(--cream); font-weight: 900; margin-bottom: 1rem;
-  }
+  .cta-title { font-family: 'Playfair Display', serif; font-size: clamp(2.5rem, 5vw, 4rem); color: var(--cream); font-weight: 900; margin-bottom: 1rem; }
   .cta-sub { font-size: 1.05rem; color: var(--mint); margin-bottom: 2.5rem; }
-  .cta-actions { display: flex; justify-content: center; gap: 1rem; }
+  .cta-actions { display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap; }
   .btn-light { background: var(--cream); color: var(--forest); padding: .9rem 2.2rem; border-radius: 50px; font-size: .95rem; font-weight: 600; text-decoration: none; transition: .2s; }
   .btn-light:hover { background: var(--white); }
   .btn-outline { border: 1.5px solid rgba(255,255,255,.4); color: var(--cream); padding: .9rem 2.2rem; border-radius: 50px; font-size: .95rem; font-weight: 500; text-decoration: none; transition: .2s; }
   .btn-outline:hover { background: rgba(255,255,255,.1); }
 
   /* ── FOOTER ── */
-  footer {
-    background: var(--forest); color: var(--mint);
-    padding: 4rem 4rem 2rem;
-  }
+  footer { background: var(--forest); color: var(--mint); padding: 4rem 4rem 2rem; }
   .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 3rem; margin-bottom: 3rem; }
   .footer-brand .logo { margin-bottom: 1rem; color: var(--cream); }
   .footer-brand p { font-size: .88rem; line-height: 1.7; color: rgba(168,201,160,.7); max-width: 260px; }
@@ -473,17 +253,10 @@
   .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: .6rem; }
   .footer-col a { font-size: .88rem; color: rgba(168,201,160,.7); text-decoration: none; transition: color .2s; }
   .footer-col a:hover { color: var(--cream); }
-  .footer-bottom {
-    border-top: 1px solid rgba(255,255,255,.08); padding-top: 2rem;
-    display: flex; justify-content: space-between; align-items: center;
-    font-size: .8rem; color: rgba(168,201,160,.5);
-  }
+  .footer-bottom { border-top: 1px solid rgba(255,255,255,.08); padding-top: 2rem; display: flex; justify-content: space-between; align-items: center; font-size: .8rem; color: rgba(168,201,160,.5); }
 
-  /* ── SCROLL ANIMATIONS ── */
-  .reveal {
-    opacity: 0; transform: translateY(32px);
-    transition: opacity .7s, transform .7s;
-  }
+  /* ── REVEAL ── */
+  .reveal { opacity: 0; transform: translateY(32px); transition: opacity .7s, transform .7s; }
   .reveal.visible { opacity: 1; transform: translateY(0); }
 
   @media (max-width: 768px) {
@@ -491,21 +264,59 @@
     .nav-links { display: none; }
     .hero { grid-template-columns: 1fr; padding: 6rem 1.5rem 3rem; }
     .hero-right { display: none; }
-    .about, .services, .coaches, .testimonials, .hiw, .pricing { padding: 5rem 1.5rem; }
-    .about { grid-template-columns: 1fr; }
+    .about { grid-template-columns: 1fr; padding: 5rem 1.5rem; }
     .about-visual { display: none; }
-    .services-grid, .coaches-grid, .hiw-steps, .pricing-grid { grid-template-columns: 1fr; }
+    .services, .coaches, .pricing { padding: 5rem 1.5rem; }
+    .services-grid, .coaches-grid, .pricing-grid { grid-template-columns: 1fr; }
     .price-card.featured { transform: none; }
     .footer-grid { grid-template-columns: 1fr 1fr; }
-    .cta-actions { flex-direction: column; align-items: center; }
   }
 </style>
 </head>
 <body>
 
-<!-- NAV -->
+<!-- ── LOGIN OVERLAY ── -->
+<div id="login-overlay">
+  <div class="login-box">
+    <span class="login-leaf">🌿</span>
+    <div class="login-logo">Green Future</div>
+    <h2 class="login-title">Welcome Back</h2>
+    <p class="login-sub">Sign in to access your coaching dashboard and continue your sustainable journey.</p>
+
+    <!-- Google One Tap / Sign In Button -->
+    <div id="g_id_onload"
+         data-client_id="377940096737-ih8k6tk81i12afn3vff753o29ln1681r.apps.googleusercontent.com"
+         data-callback="handleGoogleLogin"
+         data-auto_prompt="false">
+    </div>
+
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <svg class="google-icon" viewBox="0 0 48 48">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.35-8.16 2.35-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        <path fill="none" d="M0 0h48v48H0z"/>
+      </svg>
+      Sign in with Google
+    </button>
+
+    <div class="login-divider"><span>or</span></div>
+    <button class="guest-btn" onclick="continueAsGuest()">Continue as Guest 👀</button>
+    <p class="login-privacy">🔒 We never share your data. By signing in, you agree to our Privacy Policy & Terms of Service.</p>
+  </div>
+</div>
+
+<!-- ── USER BAR ── -->
+<div id="user-bar">
+  <img id="user-avatar" src="" alt="avatar">
+  <span id="user-name"></span>
+  <button id="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<!-- ── NAV ── -->
 <nav id="navbar">
-  <div class="logo"><span class="logo-leaf">🌿</span> Green Future</div>
+  <div class="logo">🌿 Green Future</div>
   <ul class="nav-links">
     <li><a href="#about">About</a></li>
     <li><a href="#services">Services</a></li>
@@ -515,36 +326,25 @@
   </ul>
 </nav>
 
-<!-- HERO -->
+<!-- ── HERO ── -->
 <section class="hero">
   <div class="blob blob1"></div>
   <div class="blob blob2"></div>
   <div class="blob blob3"></div>
-
   <div class="hero-left">
     <div class="hero-badge">🌱 Sustainable Coaching Platform</div>
     <h1 class="hero-title">Grow into your <em>best</em> future, naturally.</h1>
     <p class="hero-sub">Green Future connects you with world-class coaches to help you build habits, mindset, and a life aligned with your values — and the planet's.</p>
     <div class="hero-actions">
       <a href="#start" class="btn-primary">Start Your Journey</a>
-      <a href="#how" class="btn-ghost">See How It Works <span class="arrow">→</span></a>
+      <a href="#services" class="btn-ghost">Explore Programs →</a>
     </div>
     <div class="hero-stats">
-      <div>
-        <div class="stat-num">12k+</div>
-        <div class="stat-label">Clients Coached</div>
-      </div>
-      <div>
-        <div class="stat-num">98%</div>
-        <div class="stat-label">Satisfaction Rate</div>
-      </div>
-      <div>
-        <div class="stat-num">240+</div>
-        <div class="stat-label">Expert Coaches</div>
-      </div>
+      <div><div class="stat-num">12k+</div><div class="stat-label">Clients Coached</div></div>
+      <div><div class="stat-num">98%</div><div class="stat-label">Satisfaction Rate</div></div>
+      <div><div class="stat-num">240+</div><div class="stat-label">Expert Coaches</div></div>
     </div>
   </div>
-
   <div class="hero-right">
     <div class="hero-card-stack">
       <div class="coach-card tag-card">🌍 B-Corp Certified</div>
@@ -559,40 +359,22 @@
         </div>
       </div>
       <div class="coach-card secondary">
-        <div style="flex-shrink:0">
-          <div style="font-size:.7rem;color:var(--sage);margin-bottom:.3rem;">Weekly Goal</div>
-          <div class="prog-bar"><div class="prog-fill" style="width:72%"></div></div>
-          <div style="font-size:.65rem;color:var(--moss);margin-top:.2rem;">72% complete</div>
-        </div>
+        <div><div style="font-size:.7rem;color:var(--sage);margin-bottom:.4rem;">Weekly Goal</div><div class="prog-bar"><div class="prog-fill" style="width:72%"></div></div><div style="font-size:.65rem;color:var(--moss);margin-top:.3rem;">72% complete</div></div>
         <div style="font-size:1.6rem">🎯</div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- MARQUEE -->
+<!-- ── MARQUEE ── -->
 <div class="marquee-strip">
   <div class="marquee-track">
-    <span class="marquee-item">🌿 Mindset Coaching</span>
-    <span class="marquee-item">🌱 Habit Building</span>
-    <span class="marquee-item">♻️ Eco Lifestyle</span>
-    <span class="marquee-item">🧘 Wellness & Balance</span>
-    <span class="marquee-item">🌎 Climate Resilience</span>
-    <span class="marquee-item">💚 Purpose-Driven Life</span>
-    <span class="marquee-item">🌳 Career Transitions</span>
-    <span class="marquee-item">🌊 Ocean Health Advocacy</span>
-    <span class="marquee-item">🌿 Mindset Coaching</span>
-    <span class="marquee-item">🌱 Habit Building</span>
-    <span class="marquee-item">♻️ Eco Lifestyle</span>
-    <span class="marquee-item">🧘 Wellness & Balance</span>
-    <span class="marquee-item">🌎 Climate Resilience</span>
-    <span class="marquee-item">💚 Purpose-Driven Life</span>
-    <span class="marquee-item">🌳 Career Transitions</span>
-    <span class="marquee-item">🌊 Ocean Health Advocacy</span>
+    <span class="marquee-item">🌿 Mindset Coaching</span><span class="marquee-item">🌱 Habit Building</span><span class="marquee-item">♻️ Eco Lifestyle</span><span class="marquee-item">🧘 Wellness & Balance</span><span class="marquee-item">🌎 Climate Resilience</span><span class="marquee-item">💚 Purpose-Driven Life</span><span class="marquee-item">🌳 Career Transitions</span><span class="marquee-item">🌊 Ocean Health Advocacy</span>
+    <span class="marquee-item">🌿 Mindset Coaching</span><span class="marquee-item">🌱 Habit Building</span><span class="marquee-item">♻️ Eco Lifestyle</span><span class="marquee-item">🧘 Wellness & Balance</span><span class="marquee-item">🌎 Climate Resilience</span><span class="marquee-item">💚 Purpose-Driven Life</span><span class="marquee-item">🌳 Career Transitions</span><span class="marquee-item">🌊 Ocean Health Advocacy</span>
   </div>
 </div>
 
-<!-- ABOUT -->
+<!-- ── ABOUT ── -->
 <section class="about" id="about">
   <div class="about-visual reveal">
     <div class="about-ring">
@@ -605,333 +387,146 @@
   <div class="about-text reveal">
     <div class="section-label">Our Philosophy</div>
     <h2 class="section-title">Coaching that's good for you <em>&</em> the world.</h2>
-    <p class="section-body">We believe that personal growth and planetary health are inseparable. Our coaches are trained not just in peak performance — but in helping you build a life that's regenerative, intentional, and genuinely fulfilling.</p>
-    <div class="pillar-list">
-      <div class="pillar">
-        <span class="pillar-icon">🌱</span>
-        <div class="pillar-text">
-          <strong>Roots-First Approach</strong>
-          <span>We work on foundations — values, identity, and purpose — before chasing goals.</span>
-        </div>
-      </div>
-      <div class="pillar">
-        <span class="pillar-icon">🔄</span>
-        <div class="pillar-text">
-          <strong>Sustainable Progress</strong>
-          <span>Small, consistent shifts that compound into lasting transformation.</span>
-        </div>
-      </div>
-      <div class="pillar">
-        <span class="pillar-icon">🤝</span>
-        <div class="pillar-text">
-          <strong>Community-Connected</strong>
-          <span>You're never coaching alone. Our ecosystem of peers lifts everyone up.</span>
-        </div>
-      </div>
-    </div>
+    <p class="section-body">We believe personal growth and planetary health are inseparable. Our coaches help you build a life that's regenerative, intentional, and genuinely fulfilling.</p>
+    <div class="pillar"><span class="pillar-icon">🌱</span><div class="pillar-text"><strong>Roots-First Approach</strong><span>We work on foundations — values, identity, and purpose — before chasing goals.</span></div></div>
+    <div class="pillar"><span class="pillar-icon">🔄</span><div class="pillar-text"><strong>Sustainable Progress</strong><span>Small, consistent shifts that compound into lasting transformation.</span></div></div>
+    <div class="pillar"><span class="pillar-icon">🤝</span><div class="pillar-text"><strong>Community-Connected</strong><span>You're never coaching alone. Our ecosystem of peers lifts everyone up.</span></div></div>
   </div>
 </section>
 
-<!-- SERVICES -->
+<!-- ── SERVICES ── -->
 <section class="services" id="services">
   <div class="services-header reveal">
     <div class="section-label">What We Offer</div>
     <h2 class="section-title">Programs for every season of growth.</h2>
   </div>
   <div class="services-grid">
-    <div class="service-card reveal">
-      <span class="service-icon">🧭</span>
-      <div class="service-title">Life Direction</div>
-      <p class="service-desc">Clarify your vision, align your actions, and build a roadmap to a life that actually feels meaningful — not just productive.</p>
-      <a href="#" class="service-link">Explore program <span>→</span></a>
-    </div>
-    <div class="service-card reveal">
-      <span class="service-icon">🌿</span>
-      <div class="service-title">Eco Lifestyle</div>
-      <p class="service-desc">Reduce your footprint without reducing your joy. Our coaches help you transition to sustainable habits that stick.</p>
-      <a href="#" class="service-link">Explore program <span>→</span></a>
-    </div>
-    <div class="service-card reveal">
-      <span class="service-icon">💼</span>
-      <div class="service-title">Green Career</div>
-      <p class="service-desc">Pivot to purpose-driven work in sustainability, social impact, or regenerative business with expert guidance.</p>
-      <a href="#" class="service-link">Explore program <span>→</span></a>
-    </div>
-    <div class="service-card reveal">
-      <span class="service-icon">🧘</span>
-      <div class="service-title">Mindful Wellness</div>
-      <p class="service-desc">Burnout prevention, nervous system regulation, and deep rest — because you can't pour from an empty cup.</p>
-      <a href="#" class="service-link">Explore program <span>→</span></a>
-    </div>
-    <div class="service-card reveal">
-      <span class="service-icon">🏡</span>
-      <div class="service-title">Slow Living</div>
-      <p class="service-desc">Reclaim your time, declutter your space, and design a home environment that nourishes rather than drains you.</p>
-      <a href="#" class="service-link">Explore program <span>→</span></a>
-    </div>
-    <div class="service-card reveal">
-      <span class="service-icon">🌊</span>
-      <div class="service-title">Climate Resilience</div>
-      <p class="service-desc">Navigate eco-anxiety and transform climate grief into meaningful action — grounded in hope and community.</p>
-      <a href="#" class="service-link">Explore program <span>→</span></a>
-    </div>
+    <div class="service-card reveal"><span class="service-icon">🧭</span><div class="service-title">Life Direction</div><p class="service-desc">Clarify your vision, align your actions, and build a roadmap to a life that actually feels meaningful.</p><a href="#" class="service-link">Explore program →</a></div>
+    <div class="service-card reveal"><span class="service-icon">🌿</span><div class="service-title">Eco Lifestyle</div><p class="service-desc">Reduce your footprint without reducing your joy. Sustainable habits that actually stick.</p><a href="#" class="service-link">Explore program →</a></div>
+    <div class="service-card reveal"><span class="service-icon">💼</span><div class="service-title">Green Career</div><p class="service-desc">Pivot to purpose-driven work in sustainability, social impact, or regenerative business.</p><a href="#" class="service-link">Explore program →</a></div>
+    <div class="service-card reveal"><span class="service-icon">🧘</span><div class="service-title">Mindful Wellness</div><p class="service-desc">Burnout prevention, nervous system regulation, and deep rest for lasting energy.</p><a href="#" class="service-link">Explore program →</a></div>
+    <div class="service-card reveal"><span class="service-icon">🏡</span><div class="service-title">Slow Living</div><p class="service-desc">Reclaim your time, declutter your space, and design a home environment that nourishes you.</p><a href="#" class="service-link">Explore program →</a></div>
+    <div class="service-card reveal"><span class="service-icon">🌊</span><div class="service-title">Climate Resilience</div><p class="service-desc">Transform eco-anxiety and climate grief into meaningful action grounded in hope.</p><a href="#" class="service-link">Explore program →</a></div>
   </div>
 </section>
 
-<!-- COACHES -->
+<!-- ── COACHES ── -->
 <section class="coaches" id="coaches">
   <div class="coaches-header reveal">
     <div class="section-label">Our Team</div>
     <h2 class="section-title" style="color:var(--cream)">Meet your coaches.</h2>
   </div>
   <div class="coaches-grid">
-    <div class="coach-profile reveal">
-      <div class="coach-ava">🌿</div>
-      <div class="coach-pname">Amara Osei</div>
-      <div class="coach-spec">Sustainable Lifestyle · Accra, Ghana</div>
-      <div class="coach-tags">
-        <span class="tag">Eco habits</span><span class="tag">Mindset</span><span class="tag">Minimalism</span>
-      </div>
-    </div>
-    <div class="coach-profile reveal">
-      <div class="coach-ava">🍃</div>
-      <div class="coach-pname">Lucas Ferreira</div>
-      <div class="coach-spec">Green Career · São Paulo, Brazil</div>
-      <div class="coach-tags">
-        <span class="tag">Career pivot</span><span class="tag">Impact biz</span><span class="tag">B-Corp</span>
-      </div>
-    </div>
-    <div class="coach-profile reveal">
-      <div class="coach-ava">🌸</div>
-      <div class="coach-pname">Sena Yamamoto</div>
-      <div class="coach-spec">Mindful Wellness · Kyoto, Japan</div>
-      <div class="coach-tags">
-        <span class="tag">Burnout</span><span class="tag">Somatic</span><span class="tag">Slow living</span>
-      </div>
-    </div>
-    <div class="coach-profile reveal">
-      <div class="coach-ava">🏔️</div>
-      <div class="coach-pname">Björn Lindqvist</div>
-      <div class="coach-spec">Climate Resilience · Stockholm, Sweden</div>
-      <div class="coach-tags">
-        <span class="tag">Eco-anxiety</span><span class="tag">Activism</span><span class="tag">Policy</span>
-      </div>
-    </div>
-    <div class="coach-profile reveal">
-      <div class="coach-ava">🌺</div>
-      <div class="coach-pname">Priya Nair</div>
-      <div class="coach-spec">Life Direction · Bengaluru, India</div>
-      <div class="coach-tags">
-        <span class="tag">Purpose</span><span class="tag">Values</span><span class="tag">Life design</span>
-      </div>
-    </div>
-    <div class="coach-profile reveal">
-      <div class="coach-ava">🌊</div>
-      <div class="coach-pname">Maya Reeves</div>
-      <div class="coach-spec">Ocean & Nature Coaching · Cape Town, SA</div>
-      <div class="coach-tags">
-        <span class="tag">Nature-based</span><span class="tag">Grief</span><span class="tag">Wild mind</span>
-      </div>
-    </div>
+    <div class="coach-profile reveal"><div class="coach-ava">🌿</div><div class="coach-pname">Amara Osei</div><div class="coach-spec">Sustainable Lifestyle · Accra</div><div class="coach-tags"><span class="tag">Eco habits</span><span class="tag">Mindset</span><span class="tag">Minimalism</span></div></div>
+    <div class="coach-profile reveal"><div class="coach-ava">🍃</div><div class="coach-pname">Lucas Ferreira</div><div class="coach-spec">Green Career · São Paulo</div><div class="coach-tags"><span class="tag">Career pivot</span><span class="tag">Impact biz</span></div></div>
+    <div class="coach-profile reveal"><div class="coach-ava">🌸</div><div class="coach-pname">Sena Yamamoto</div><div class="coach-spec">Mindful Wellness · Kyoto</div><div class="coach-tags"><span class="tag">Burnout</span><span class="tag">Slow living</span></div></div>
+    <div class="coach-profile reveal"><div class="coach-ava">🏔️</div><div class="coach-pname">Björn Lindqvist</div><div class="coach-spec">Climate Resilience · Stockholm</div><div class="coach-tags"><span class="tag">Eco-anxiety</span><span class="tag">Activism</span></div></div>
+    <div class="coach-profile reveal"><div class="coach-ava">🌺</div><div class="coach-pname">Priya Nair</div><div class="coach-spec">Life Direction · Bengaluru</div><div class="coach-tags"><span class="tag">Purpose</span><span class="tag">Life design</span></div></div>
+    <div class="coach-profile reveal"><div class="coach-ava">🌊</div><div class="coach-pname">Maya Reeves</div><div class="coach-spec">Ocean Coaching · Cape Town</div><div class="coach-tags"><span class="tag">Nature-based</span><span class="tag">Wild mind</span></div></div>
   </div>
 </section>
 
-<!-- TESTIMONIALS -->
-<section class="testimonials">
-  <div class="testimonials-header reveal">
-    <div class="section-label">Stories</div>
-    <h2 class="section-title">Transformations that matter.</h2>
-  </div>
-  <div class="testi-track reveal">
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <p class="testi-quote">"Working with Amara completely shifted how I think about consumption. I'm happier with less, and my carbon footprint is down 40%. Life feels lighter."</p>
-      <div class="testi-author">
-        <div class="testi-ava">👩</div>
-        <div><div class="testi-name">Claire Dubois</div><div class="testi-sub">Eco Lifestyle Program, Paris</div></div>
-      </div>
-    </div>
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <p class="testi-quote">"I was completely burned out from my corporate job. After 6 months with Sena, I launched my own regenerative farm consultancy. Best decision of my life."</p>
-      <div class="testi-author">
-        <div class="testi-ava">👨</div>
-        <div><div class="testi-name">Tom Harrington</div><div class="testi-sub">Green Career Program, Bristol</div></div>
-      </div>
-    </div>
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <p class="testi-quote">"The Climate Resilience sessions with Björn gave me tools to deal with my climate grief and channel it into real advocacy. I feel powerful, not paralyzed."</p>
-      <div class="testi-author">
-        <div class="testi-ava">🧑</div>
-        <div><div class="testi-name">Yuki Tanaka</div><div class="testi-sub">Climate Resilience, Tokyo</div></div>
-      </div>
-    </div>
-    <div class="testi-card">
-      <div class="testi-stars">★★★★★</div>
-      <p class="testi-quote">"Priya helped me finally understand what I actually want from life — not what I thought I 'should' want. It was gentle and profound at the same time."</p>
-      <div class="testi-author">
-        <div class="testi-ava">👩‍🦱</div>
-        <div><div class="testi-name">Fatima El-Amin</div><div class="testi-sub">Life Direction Program, Dubai</div></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- HOW IT WORKS -->
-<section class="hiw" id="how">
-  <div class="hiw-header reveal">
-    <div class="section-label">Process</div>
-    <h2 class="section-title">Four steps to transformation.</h2>
-  </div>
-  <div class="hiw-steps">
-    <div class="hiw-step reveal">
-      <div class="step-num">1</div>
-      <div class="step-title">Take the Assessment</div>
-      <p class="step-desc">A short values and goals assessment matches you with the right coach and program for where you are today.</p>
-    </div>
-    <div class="hiw-step reveal">
-      <div class="step-num">2</div>
-      <div class="step-title">Meet Your Coach</div>
-      <p class="step-desc">A free intro session lets you connect and confirm the fit before committing to anything.</p>
-    </div>
-    <div class="hiw-step reveal">
-      <div class="step-num">3</div>
-      <div class="step-title">Begin Your Program</div>
-      <p class="step-desc">Regular 1:1 sessions, curated resources, and weekly check-ins keep you moving forward.</p>
-    </div>
-    <div class="hiw-step reveal">
-      <div class="step-num">4</div>
-      <div class="step-title">Grow & Give Back</div>
-      <p class="step-desc">Celebrate milestones, join our community, and inspire others on a similar path.</p>
-    </div>
-  </div>
-</section>
-
-<!-- PRICING -->
+<!-- ── PRICING ── -->
 <section class="pricing" id="pricing">
   <div class="pricing-header reveal">
     <div class="section-label">Investment</div>
     <h2 class="section-title">Simple, transparent pricing.</h2>
   </div>
   <div class="pricing-grid">
-    <div class="price-card reveal">
-      <div class="plan-name">Seed</div>
-      <div class="plan-price">$49</div>
-      <div class="plan-period">per month</div>
-      <ul class="plan-features">
-        <li>2 coaching sessions / month</li>
-        <li>Access to resource library</li>
-        <li>Community forum access</li>
-        <li>Monthly group webinar</li>
-        <li>Email support</li>
-      </ul>
-      <a href="#" class="plan-btn">Get Started</a>
-    </div>
-    <div class="price-card featured reveal">
-      <div class="popular-badge">MOST POPULAR</div>
-      <div class="plan-name">Sprout</div>
-      <div class="plan-price">$129</div>
-      <div class="plan-period">per month</div>
-      <ul class="plan-features">
-        <li>4 coaching sessions / month</li>
-        <li>Full program access</li>
-        <li>Priority coach matching</li>
-        <li>Progress tracking dashboard</li>
-        <li>Slack community access</li>
-        <li>Unlimited messaging</li>
-      </ul>
-      <a href="#" class="plan-btn">Get Started</a>
-    </div>
-    <div class="price-card reveal">
-      <div class="plan-name">Forest</div>
-      <div class="plan-price">$249</div>
-      <div class="plan-period">per month</div>
-      <ul class="plan-features">
-        <li>Unlimited coaching sessions</li>
-        <li>Dedicated lead coach</li>
-        <li>Custom program design</li>
-        <li>Team / family add-ons</li>
-        <li>Concierge onboarding</li>
-        <li>VIP event invitations</li>
-      </ul>
-      <a href="#" class="plan-btn">Get Started</a>
-    </div>
+    <div class="price-card reveal"><div class="plan-name">Seed</div><div class="plan-price">$49</div><div class="plan-period">per month</div><ul class="plan-features"><li>2 coaching sessions/month</li><li>Resource library access</li><li>Community forum</li><li>Monthly webinar</li></ul><a href="#" class="plan-btn">Get Started</a></div>
+    <div class="price-card featured reveal"><div class="popular-badge">MOST POPULAR</div><div class="plan-name">Sprout</div><div class="plan-price">$129</div><div class="plan-period">per month</div><ul class="plan-features"><li>4 coaching sessions/month</li><li>Full program access</li><li>Priority matching</li><li>Progress dashboard</li><li>Unlimited messaging</li></ul><a href="#" class="plan-btn">Get Started</a></div>
+    <div class="price-card reveal"><div class="plan-name">Forest</div><div class="plan-price">$249</div><div class="plan-period">per month</div><ul class="plan-features"><li>Unlimited sessions</li><li>Dedicated coach</li><li>Custom program</li><li>VIP events</li></ul><a href="#" class="plan-btn">Get Started</a></div>
   </div>
 </section>
 
-<!-- CTA -->
+<!-- ── CTA ── -->
 <section class="cta-banner" id="start">
   <h2 class="cta-title">Your greener future starts today.</h2>
-  <p class="cta-sub">Join 12,000+ people already living with more purpose, less waste, and deeper joy.</p>
+  <p class="cta-sub">Join 12,000+ people already living with more purpose and deeper joy.</p>
   <div class="cta-actions">
-    <a href="#" class="btn-light">Book a Free Intro Call</a>
-    <a href="#" class="btn-outline">View All Coaches →</a>
+    <a href="#" class="btn-light" onclick="signInWithGoogle()">Book a Free Intro Call</a>
+    <a href="#coaches" class="btn-outline">View All Coaches →</a>
   </div>
 </section>
 
-<!-- FOOTER -->
+<!-- ── FOOTER ── -->
 <footer>
   <div class="footer-grid">
-    <div class="footer-brand">
-      <div class="logo">🌿 Green Future</div>
-      <p>Coaching for a life that's good for you and the world. Certified B-Corp. Carbon neutral since 2022.</p>
-    </div>
-    <div class="footer-col">
-      <h4>Programs</h4>
-      <ul>
-        <li><a href="#">Life Direction</a></li>
-        <li><a href="#">Eco Lifestyle</a></li>
-        <li><a href="#">Green Career</a></li>
-        <li><a href="#">Mindful Wellness</a></li>
-        <li><a href="#">Climate Resilience</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Company</h4>
-      <ul>
-        <li><a href="#">About Us</a></li>
-        <li><a href="#">Our Coaches</a></li>
-        <li><a href="#">B-Corp Report</a></li>
-        <li><a href="#">Blog</a></li>
-        <li><a href="#">Press</a></li>
-      </ul>
-    </div>
-    <div class="footer-col">
-      <h4>Support</h4>
-      <ul>
-        <li><a href="#">Help Center</a></li>
-        <li><a href="#">Become a Coach</a></li>
-        <li><a href="#">Partnerships</a></li>
-        <li><a href="#">Privacy Policy</a></li>
-        <li><a href="#">Terms</a></li>
-      </ul>
-    </div>
+    <div class="footer-brand"><div class="logo">🌿 Green Future</div><p>Coaching for a life that's good for you and the world. Certified B-Corp. Carbon neutral since 2022.</p></div>
+    <div class="footer-col"><h4>Programs</h4><ul><li><a href="#">Life Direction</a></li><li><a href="#">Eco Lifestyle</a></li><li><a href="#">Green Career</a></li><li><a href="#">Mindful Wellness</a></li></ul></div>
+    <div class="footer-col"><h4>Company</h4><ul><li><a href="#">About Us</a></li><li><a href="#">Our Coaches</a></li><li><a href="#">Blog</a></li><li><a href="#">Press</a></li></ul></div>
+    <div class="footer-col"><h4>Support</h4><ul><li><a href="#">Help Center</a></li><li><a href="#">Become a Coach</a></li><li><a href="#">Privacy Policy</a></li><li><a href="#">Terms</a></li></ul></div>
   </div>
-  <div class="footer-bottom">
-    <span>© 2026 Green Future. All rights reserved.</span>
-    <span>Made with 💚 for the planet</span>
-  </div>
+  <div class="footer-bottom"><span>© 2026 Green Future. All rights reserved.</span><span>Made with 💚 for the planet</span></div>
 </footer>
 
 <script>
-  // Nav scroll effect
+  // ── NAV SCROLL ──
   const navbar = document.getElementById('navbar');
-  window.addEventListener('scroll', () => {
-    navbar.classList.toggle('scrolled', window.scrollY > 40);
-  });
+  window.addEventListener('scroll', () => navbar.classList.toggle('scrolled', window.scrollY > 40));
 
-  // Scroll reveal
+  // ── REVEAL ──
   const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((e, i) => {
-      if (e.isIntersecting) {
-        setTimeout(() => e.target.classList.add('visible'), i * 80);
-        observer.unobserve(e.target);
-      }
+  new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => { if (e.isIntersecting) { setTimeout(() => e.target.classList.add('visible'), i * 80); } });
+  }, { threshold: 0.12 }).observe && reveals.forEach(el => new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.12 }).observe(el));
+
+  // ── GOOGLE LOGIN ──
+  function signInWithGoogle() {
+    // ⚠️ Replace YOUR_GOOGLE_CLIENT_ID with real Client ID from Google Cloud Console
+    google.accounts.id.initialize({
+      client_id: '377940096737-ih8k6tk81i12afn3vff753o29ln1681r.apps.googleusercontent.com',
+      callback: handleGoogleLogin
     });
-  }, { threshold: 0.12 });
-  reveals.forEach(el => observer.observe(el));
+    google.accounts.id.prompt();
+  }
+
+  function handleGoogleLogin(response) {
+    // Decode JWT token
+    const base64 = response.credential.split('.')[1];
+    const data = JSON.parse(atob(base64));
+
+    // Save user info
+    localStorage.setItem('gf_user', JSON.stringify({
+      name: data.name,
+      email: data.email,
+      picture: data.picture
+    }));
+
+    showUserBar(data);
+    hideLoginOverlay();
+  }
+
+  function showUserBar(data) {
+    document.getElementById('user-avatar').src = data.picture || '';
+    document.getElementById('user-name').textContent = data.name.split(' ')[0];
+    document.getElementById('user-bar').classList.add('show');
+  }
+
+  function hideLoginOverlay() {
+    document.getElementById('login-overlay').classList.add('hidden');
+  }
+
+  function continueAsGuest() {
+    hideLoginOverlay();
+  }
+
+  function logout() {
+    localStorage.removeItem('gf_user');
+    document.getElementById('user-bar').classList.remove('show');
+    document.getElementById('login-overlay').classList.remove('hidden');
+  }
+
+  // ── AUTO LOGIN if already signed in ──
+  window.addEventListener('load', () => {
+    const saved = localStorage.getItem('gf_user');
+    if (saved) {
+      showUserBar(JSON.parse(saved));
+      hideLoginOverlay();
+    }
+  });
 </script>
 </body>
 </html>
